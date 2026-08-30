@@ -1,0 +1,43 @@
+
+
+
+
+
+
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #111;
+  color: #eee;
+  font-family: monospace;
+  text-align: center;
+  cursor: none; /* mouse is visually gone, lekin JS also ignores clicks */
+  user-select: none;
+}
+
+#grid {
+  display: grid;
+  /* 15 columns x 10 rows, matches game.js COLS/ROWS */
+  grid-template-columns: repeat(15, 32px);
+  grid-template-rows: repeat(10, 32px);
+  gap: 2px;
+  justify-content: center;
+  margin: 20px auto;
+}
+
+.tile {
+  width: 32px;
+  height: 32px;
+  background: #222; /* floor */
+}
+
+.wall {
+  background: #444;
+}
+
+.player {
+  background: #4caf50;
+}
