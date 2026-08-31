@@ -14,23 +14,39 @@ body {
   color: #eee;
   font-family: monospace;
   text-align: center;
-  cursor: none; /* mouse is visually gone, lekin JS also ignores clicks */
+  cursor: none; /* mouse is hidden */
   user-select: none;
+}
+
+#game-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+#level-label {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #aaa;
+  /* puts the text sideways */
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
 }
 
 #grid {
   display: grid;
-  /* 15 columns x 10 rows, matches game.js COLS/ROWS */
-  grid-template-columns: repeat(15, 32px);
-  grid-template-rows: repeat(10, 32px);
+  /* 21 columns and 15 rows */
+  grid-template-columns: repeat(21, 26px);
+  grid-template-rows: repeat(15, 26px);
   gap: 2px;
   justify-content: center;
   margin: 20px auto;
 }
 
 .tile {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   background: #222; /* floor */
 }
 
@@ -40,4 +56,14 @@ body {
 
 .player {
   background: #4caf50;
+}
+
+.exit {
+  background: #d4af37; /* gold */
+}
+
+#message {
+  min-height: 1.5em;
+  font-size: 1.1em;
+  color: #d4af37;
 }
