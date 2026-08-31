@@ -1,28 +1,37 @@
-// c/onw i am going to start  
-/// ---- Grid setup ----
-const COLS = 15;
-const ROWS = 10;
+// ---- Grid setup ----
+const COLS = 21;
+const ROWS = 15;
 
 // Map layout: 1 = wall, 0 = floor
-// 
+// has branches and dead ends
 const map = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-  [1,0,1,0,0,1,0,1,1,1,1,1,0,0,1],
-  [1,0,1,0,0,0,0,1,0,0,0,1,0,0,1],
-  [1,0,1,1,1,1,0,1,0,1,0,1,0,0,1],
-  [1,0,0,0,0,1,0,1,0,1,0,0,0,0,1],
-  [1,1,1,1,0,1,0,1,0,1,1,1,1,0,1],
-  [1,0,0,0,0,0,0,1,0,0,0,0,1,0,1],
-  [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1],
+  [1,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+  [1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1],
+  [1,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,1],
+  [1,0,1,1,1,1,1,1,1,0,1,1,1,0,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,0,1,1,1,0,1,0,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1,0,1],
+  [1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+  [1,0,1,0,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1],
+  [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
-// Player state
+// player starts here
 let player = { x: 1, y: 1 };
+const exitTile = { x: 19, y: 1 };
+
+// message under the grid
+const messageEl = document.getElementById('message');
 
 const gridEl = document.getElementById('grid');
 
+// keep the tiles here so we don't have to make them again
 const tileEls = [];
 
 function buildGrid() {
@@ -31,46 +40,66 @@ function buildGrid() {
     for (let x = 0; x < COLS; x++) {
       const tile = document.createElement('div');
       tile.classList.add('tile');
+
       if (map[y][x] === 1) {
         tile.classList.add('wall');
       }
+
+      if (x === exitTile.x && y === exitTile.y) {
+        tile.classList.add('exit');
+      }
+
       gridEl.appendChild(tile);
       row.push(tile);
     }
+
     tileEls.push(row);
   }
 }
 
-// Redraw only the player ki position (clear old, mark new)
+// redraw the player when they move
 let lastPlayerPos = { x: player.x, y: player.y };
 
 function draw() {
-  // remove player class from old tile
   tileEls[lastPlayerPos.y][lastPlayerPos.x].classList.remove('player');
-  // add it to current tile
   tileEls[player.y][player.x].classList.add('player');
+
   lastPlayerPos = { x: player.x, y: player.y };
 }
 
-// Check if a tile is walkable  - sahi hai
+// check if there is a wall
 function isWall(x, y) {
-  if (y < 0 || y >= ROWS || x < 0 || x >= COLS) return true; // out of bounds = wall
+  if (y < 0 || y >= ROWS || x < 0 || x >= COLS) return true;
   return map[y][x] === 1;
 }
 
+let levelWon = false;
+
 function tryMove(dx, dy) {
+  if (levelWon) return;
+
   const newX = player.x + dx;
   const newY = player.y + dy;
+
   if (!isWall(newX, newY)) {
     player.x = newX;
     player.y = newY;
+
     draw();
+    checkWin();
   }
 }
 
-// ---- Keyboard-only controls ----
-// Arrow keys + WASD move the player. after meal i'll type next 
-// Tab is explicitly blocked so it can never shift focus or do anything.acc to rule bug tab fixed now 
+function checkWin() {
+  if (player.x === exitTile.x && player.y === exitTile.y) {
+    levelWon = true;
+    messageEl.textContent = 'Floor cleared! You found the way out.';
+  }
+}
+
+// ---- Keyboard controls ----
+// Arrow keys and WASD move the player
+// Tab is blocked
 window.addEventListener('keydown', (e) => {
   switch (e.key) {
     case 'ArrowUp':
@@ -79,32 +108,35 @@ window.addEventListener('keydown', (e) => {
       e.preventDefault();
       tryMove(0, -1);
       break;
+
     case 'ArrowDown':
     case 's':
     case 'S':
       e.preventDefault();
       tryMove(0, 1);
       break;
+
     case 'ArrowLeft':
     case 'a':
     case 'A':
       e.preventDefault();
       tryMove(-1, 0);
       break;
+
     case 'ArrowRight':
     case 'd':
     case 'D':
       e.preventDefault();
       tryMove(1, 0);
       break;
+
     case 'Tab':
-      e.preventDefault(); // Tab does nothing, ever
+      e.preventDefault();
       break;
   }
 });
 
-// No click listeners anywhere on purpose the mouse simply
-// cannot interact with this game.and yahi toh rule tha naah good 
+// no mouse controls
 
 // ---- Init ----
 buildGrid();
