@@ -2,8 +2,7 @@
 const COLS = 21;
 const ROWS = 15;
 
-// Map layout: 1 = wall, 0 = floor
-// has branches and dead ends
+// 1 = wall, 0 = floor
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
@@ -22,21 +21,18 @@ const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
-// player starts here
 let player = { x: 1, y: 1 };
 const exitTile = { x: 19, y: 1 };
 
-// message under the grid
 const messageEl = document.getElementById('message');
-
 const gridEl = document.getElementById('grid');
 
-// keep the tiles here so we don't have to make them again
 const tileEls = [];
 
 function buildGrid() {
   for (let y = 0; y < ROWS; y++) {
     const row = [];
+
     for (let x = 0; x < COLS; x++) {
       const tile = document.createElement('div');
       tile.classList.add('tile');
@@ -57,7 +53,6 @@ function buildGrid() {
   }
 }
 
-// redraw the player when they move
 let lastPlayerPos = { x: player.x, y: player.y };
 
 function draw() {
@@ -67,7 +62,6 @@ function draw() {
   lastPlayerPos = { x: player.x, y: player.y };
 }
 
-// check if there is a wall
 function isWall(x, y) {
   if (y < 0 || y >= ROWS || x < 0 || x >= COLS) return true;
   return map[y][x] === 1;
@@ -97,47 +91,120 @@ function checkWin() {
   }
 }
 
+// ---- Typing-to-move ----
+const wordList = [
+  'shadow',
+  'flicker',
+  'hollow',
+  'ember',
+  'wander',
+  'silent',
+  'crawl',
+  'echo'
+];
+
+let currentWordIndex = 0;
+let armedDirection = null;
+let typedBuffer = '';
+
+const wordTargetEl = document.getElementById('word-target');
+const typedBufferEl = document.getElementById('typed-buffer');
+const directionIconEl = document.getElementById('direction-icon');
+
+const directionMap = {
+  ArrowUp: { dx: 0, dy: -1, icon: '↑' },
+  ArrowDown: { dx: 0, dy: 1, icon: '↓' },
+  ArrowLeft: { dx: -1, dy: 0, icon: '←' },
+  ArrowRight: { dx: 1, dy: 0, icon: '→' },
+};
+
+function updateDirectionIcon() {
+  directionIconEl.textContent = armedDirection
+    ? armedDirection.icon
+    : '(pick a direction)';
+}
+
+function updateWordTarget() {
+  wordTargetEl.textContent = wordList[currentWordIndex];
+}
+
+function updateTypedDisplay() {
+  typedBufferEl.textContent = typedBuffer;
+}
+
+function checkWordAndMove() {
+  if (!armedDirection) return;
+
+  const targetWord = wordList[currentWordIndex];
+
+  if (typedBuffer.toLowerCase() === targetWord) {
+    tryMove(armedDirection.dx, armedDirection.dy);
+
+    currentWordIndex = (currentWordIndex + 1) % wordList.length;
+    armedDirection = null;
+    typedBuffer = '';
+
+    updateDirectionIcon();
+    updateWordTarget();
+    updateTypedDisplay();
+  } else {
+    typedBuffer = '';
+    updateTypedDisplay();
+  }
+}
+
 // ---- Keyboard controls ----
-// Arrow keys and WASD move the player
-// Tab is blocked
 window.addEventListener('keydown', (e) => {
-  switch (e.key) {
-    case 'ArrowUp':
-    case 'w':
-    case 'W':
-      e.preventDefault();
-      tryMove(0, -1);
-      break;
+  const key = e.key;
 
-    case 'ArrowDown':
-    case 's':
-    case 'S':
-      e.preventDefault();
-      tryMove(0, 1);
-      break;
+  if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+  }
 
-    case 'ArrowLeft':
-    case 'a':
-    case 'A':
-      e.preventDefault();
-      tryMove(-1, 0);
-      break;
+  if (e.repeat) return;
 
-    case 'ArrowRight':
-    case 'd':
-    case 'D':
-      e.preventDefault();
-      tryMove(1, 0);
-      break;
+  if (key === 'Tab') {
+    e.preventDefault();
+    return;
+  }
 
-    case 'Tab':
-      e.preventDefault();
-      break;
+  if (levelWon) return;
+
+  if (directionMap[key]) {
+    e.preventDefault();
+    armedDirection = directionMap[key];
+    updateDirectionIcon();
+    return;
+  }
+
+  if (key === 'Enter') {
+    e.preventDefault();
+    checkWordAndMove();
+    return;
+  }
+
+  if (key === 'Backspace') {
+    e.preventDefault();
+    typedBuffer = typedBuffer.slice(0, -1);
+    updateTypedDisplay();
+    return;
+  }
+
+  if (key.length === 1 && /[a-zA-Z]/.test(key)) {
+    e.preventDefault();
+    typedBuffer += key.toLowerCase();
+    updateTypedDisplay();
   }
 });
 
-// no mouse controls
+window.addEventListener('blur', () => {
+  typedBuffer = '';
+  updateTypedDisplay();
+});
 
 // ---- Init ----
 buildGrid();
 draw();
+updateWordTarget();
+updateDirectionIcon();
+updateTypedDisplay();
