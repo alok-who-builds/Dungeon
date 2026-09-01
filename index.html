@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dungeon</title>
+  <title>Keyboard Dungeon</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,6 +16,12 @@
     <div id="grid"></div>
   </div>
   <p id="message"></p>
+
+  <div id="typing-area">
+    <div id="direction-icon"></div>
+    <div>Type: <span id="word-target"></span></div>
+    <div>You typed: <span id="typed-buffer"></span></div>
+  </div>
 
   <script src="game.js"></script>
 </body>
