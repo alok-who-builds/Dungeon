@@ -4,6 +4,7 @@
 
 
 
+
 * {
   box-sizing: border-box;
 }
@@ -13,7 +14,7 @@ body {
   color: #eee;
   font-family: monospace;
   text-align: center;
-  cursor: none;
+  cursor: none; 
   user-select: none;
 }
 
@@ -28,6 +29,7 @@ body {
   font-size: 1.4em;
   font-weight: bold;
   color: #aaa;
+ 
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
@@ -39,12 +41,12 @@ body {
   gap: 2px;
   justify-content: center;
   margin: 20px auto;
+  position: relative;
 }
-
 .tile {
   width: 26px;
   height: 26px;
-  background: #222;
+  background: #222; 
 }
 
 .wall {
@@ -56,7 +58,7 @@ body {
 }
 
 .exit {
-  background: #d4af37;
+  background: #d4af37; 
 }
 
 #message {
@@ -83,4 +85,14 @@ body {
 
 #typed-buffer {
   color: #eee;
+}
+.player-piece {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: #4caf50;
+  top: 0;
+  left: 0;
+  transition: transform 70ms linear;
+  z-index: 2;
 }
