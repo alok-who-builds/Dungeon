@@ -4,7 +4,6 @@
 
 
 
-
 * {
   box-sizing: border-box;
 }
@@ -29,13 +28,14 @@ body {
   font-size: 1.4em;
   font-weight: bold;
   color: #aaa;
- 
+
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
 
 #grid {
   display: grid;
+ 
   grid-template-columns: repeat(21, 26px);
   grid-template-rows: repeat(15, 26px);
   gap: 2px;
@@ -43,10 +43,11 @@ body {
   margin: 20px auto;
   position: relative;
 }
+
 .tile {
   width: 26px;
   height: 26px;
-  background: #222; 
+  background: #222;
 }
 
 .wall {
@@ -86,6 +87,7 @@ body {
 #typed-buffer {
   color: #eee;
 }
+
 .player-piece {
   position: absolute;
   width: 26px;
@@ -95,4 +97,15 @@ body {
   left: 0;
   transition: transform 70ms linear;
   z-index: 2;
+}
+
+.enemy-piece {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: #d44;
+  top: 0;
+  left: 0;
+  transition: transform 120ms linear;
+  z-index: 3;
 }
