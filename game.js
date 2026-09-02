@@ -1,4 +1,4 @@
-// ---- Grid setup ----
+// ---- Grid setuppp ----
 const COLS = 21;
 const ROWS = 15;
 
@@ -23,6 +23,11 @@ const map = [
 
 let player = { x: 1, y: 1 };
 const exitTile = { x: 19, y: 1 };
+
+let enemy = { x: 1, y: 1 };
+let enemyStarted = false;
+let playerMoves = 0;
+let gameOver = false;
 
 const messageEl = document.getElementById('message');
 const gridEl = document.getElementById('grid');
@@ -57,11 +62,22 @@ const playerEl = document.createElement('div');
 playerEl.classList.add('player-piece');
 gridEl.appendChild(playerEl);
 
+const enemyEl = document.createElement('div');
+enemyEl.classList.add('enemy-piece');
+gridEl.appendChild(enemyEl);
+
 function draw() {
   const x = player.x * 28;
   const y = player.y * 28;
 
   playerEl.style.transform = `translate(${x}px, ${y}px)`;
+}
+
+function drawEnemy() {
+  const x = enemy.x * 28;
+  const y = enemy.y * 28;
+
+  enemyEl.style.transform = `translate(${x}px, ${y}px)`;
 }
 
 function isWall(x, y) {
@@ -80,6 +96,57 @@ function getOpenDirections(x, y) {
   return directions;
 }
 
+// ---- Enemy pathfinding ----
+function getEnemyNextStep() {
+  const queue = [{ x: enemy.x, y: enemy.y }];
+  const visited = new Set();
+  const previous = new Map();
+
+  visited.add(`${enemy.x},${enemy.y}`);
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+
+    if (current.x === player.x && current.y === player.y) {
+      break;
+    }
+
+    const directions = getOpenDirections(current.x, current.y);
+
+    for (const direction of directions) {
+      const nextX = current.x + direction.dx;
+      const nextY = current.y + direction.dy;
+      const key = `${nextX},${nextY}`;
+
+      if (!visited.has(key)) {
+        visited.add(key);
+        previous.set(key, current);
+        queue.push({ x: nextX, y: nextY });
+      }
+    }
+  }
+
+  const playerKey = `${player.x},${player.y}`;
+
+  if (!previous.has(playerKey)) {
+    return null;
+  }
+
+  let current = { x: player.x, y: player.y };
+
+  while (previous.has(`${current.x},${current.y}`)) {
+    const before = previous.get(`${current.x},${current.y}`);
+
+    if (before.x === enemy.x && before.y === enemy.y) {
+      return current;
+    }
+
+    current = before;
+  }
+
+  return null;
+}
+
 let levelWon = false;
 let moving = false;
 
@@ -87,8 +154,9 @@ function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ---- Player movement ----
 async function tryMove(dx, dy) {
-  if (levelWon || moving) return;
+  if (levelWon || gameOver || moving) return;
 
   moving = true;
 
@@ -130,13 +198,34 @@ async function tryMove(dx, dy) {
   moving = false;
 }
 
-// ---- Win check ----
+// ---- Win checkkk ----
 function checkWin() {
   if (player.x === exitTile.x && player.y === exitTile.y) {
     levelWon = true;
     messageEl.textContent = 'Floor cleared! You found the way out.';
   }
 }
+
+// ---- Enemyyy --------------
+function moveEnemy() {
+  if (!enemyStarted || levelWon || gameOver || moving) return;
+
+  const nextStep = getEnemyNextStep();
+
+  if (!nextStep) return;
+
+  enemy.x = nextStep.x;
+  enemy.y = nextStep.y;
+
+  drawEnemy();
+
+  if (enemy.x === player.x && enemy.y === player.y) {
+    gameOver = true;
+    messageEl.textContent = 'You were caught.';
+  }
+}
+
+setInterval(moveEnemy, 750);
 
 // ---- Typing-to-move ----
 const wordList = [
@@ -229,7 +318,18 @@ async function checkWordAndMove() {
     updateWordTarget();
     updateTypedDisplay();
 
+    const startX = player.x;
+    const startY = player.y;
+
     await tryMove(armedDirection.dx, armedDirection.dy);
+
+    if (player.x !== startX || player.y !== startY) {
+      playerMoves++;
+
+      if (playerMoves >= 3) {
+        enemyStarted = true;
+      }
+    }
   } else {
     typedBuffer = '';
     updateTypedDisplay();
@@ -251,7 +351,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  if (levelWon) return;
+  if (levelWon || gameOver) return;
 
   if (directionMap[key]) {
     e.preventDefault();
@@ -288,6 +388,7 @@ window.addEventListener('blur', () => {
 // ---- Init ----
 buildGrid();
 draw();
+drawEnemy();
 updateWordTarget();
 updateDirectionIcon();
 updateTypedDisplay();
