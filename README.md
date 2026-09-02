@@ -1,19 +1,23 @@
 # Dungeon
-dungeon -  push as deep as you can before you die. 
-live at https://alok-who-builds.github.io/Dungeon/
+
+Push as deep as you can before you die.
+
+Play it here: https://alok-who-builds.github.io/Dungeon/
+
 # Keyboard-Only Dungeon Crawler
 
 A small dungeon crawler that is played entirely with the keyboard.
 
-The goal is to find your way through the maze and reach the exit. Instead of simply moving with the arrow keys, you have to choose a direction and then type the word shown on screen to move.
+The goal is to find your way through the maze, move through the corridors by typing words, and reach the exit while an enemy chases you.
 
 ## How to Play
 
 1. Use an **Arrow Key** to choose a direction.
 2. Type the word shown on the screen.
 3. Press **Enter** to move.
-4. If the word is wrong, it gets cleared and you can try again.
-5. Reach the exit to clear the level.
+4. The player moves through the corridor until reaching a wall, dead end, junction, or exit.
+5. Choose another direction when needed and keep moving.
+6. Stay ahead of the enemy and reach the exit before you are caught.
 
 There are no mouse controls, and the **Tab key is blocked**.
 
@@ -31,13 +35,16 @@ There are no mouse controls, and the **Tab key is blocked**.
 
 - Keyboard-only gameplay
 - Branching maze with dead ends and different paths
+- Corridor-based movement
 - Collision with walls
 - Exit tile and level completion
 - Typing-based movement
-- Predetermined word list
+- Random typing words
+- Direction stays selected until changed
 - Direction indicator
 - Typed word display
-- Keyboard input handling
+- Enemy chase system
+- Enemy follows the player through the maze
 - No mouse interaction
 
 ## Built With
