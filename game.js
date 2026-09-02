@@ -53,13 +53,15 @@ function buildGrid() {
   }
 }
 
-let lastPlayerPos = { x: player.x, y: player.y };
+const playerEl = document.createElement('div');
+playerEl.classList.add('player-piece');
+gridEl.appendChild(playerEl);
 
 function draw() {
-  tileEls[lastPlayerPos.y][lastPlayerPos.x].classList.remove('player');
-  tileEls[player.y][player.x].classList.add('player');
+  const x = player.x * 28;
+  const y = player.y * 28;
 
-  lastPlayerPos = { x: player.x, y: player.y };
+  playerEl.style.transform = `translate(${x}px, ${y}px)`;
 }
 
 function isWall(x, y) {
@@ -67,23 +69,68 @@ function isWall(x, y) {
   return map[y][x] === 1;
 }
 
+function getOpenDirections(x, y) {
+  const directions = [];
+
+  if (!isWall(x, y - 1)) directions.push({ dx: 0, dy: -1 });
+  if (!isWall(x, y + 1)) directions.push({ dx: 0, dy: 1 });
+  if (!isWall(x - 1, y)) directions.push({ dx: -1, dy: 0 });
+  if (!isWall(x + 1, y)) directions.push({ dx: 1, dy: 0 });
+
+  return directions;
+}
+
 let levelWon = false;
+let moving = false;
 
-function tryMove(dx, dy) {
-  if (levelWon) return;
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  const newX = player.x + dx;
-  const newY = player.y + dy;
+async function tryMove(dx, dy) {
+  if (levelWon || moving) return;
 
-  if (!isWall(newX, newY)) {
+  moving = true;
+
+  while (true) {
+    const newX = player.x + dx;
+    const newY = player.y + dy;
+
+    if (isWall(newX, newY)) {
+      break;
+    }
+
     player.x = newX;
     player.y = newY;
 
     draw();
-    checkWin();
+
+    if (player.x === exitTile.x && player.y === exitTile.y) {
+      checkWin();
+      break;
+    }
+
+    await wait(70);
+
+    const openDirections = getOpenDirections(player.x, player.y);
+
+    const otherDirections = openDirections.filter(direction => {
+      return !(direction.dx === -dx && direction.dy === -dy);
+    });
+
+    if (otherDirections.length > 1) {
+      break;
+    }
+
+    if (isWall(player.x + dx, player.y + dy)) {
+      break;
+    }
   }
+
+  moving = false;
 }
 
+// ---- Win check ----
 function checkWin() {
   if (player.x === exitTile.x && player.y === exitTile.y) {
     levelWon = true;
@@ -100,7 +147,38 @@ const wordList = [
   'wander',
   'silent',
   'crawl',
-  'echo'
+  'echo',
+  'dark',
+  'ghost',
+  'chase',
+  'escape',
+  'danger',
+  'mist',
+  'stone',
+  'night',
+  'fear',
+  'run',
+  'deep',
+  'lost',
+  'trap',
+  'maze',
+  'dead',
+  'flame',
+  'blood',
+  'cold',
+  'creep',
+  'alone',
+  'curse',
+  'dread',
+  'haunt',
+  'break',
+  'hide',
+  'rush',
+  'watch',
+  'stalk',
+  'drift',
+  'panic',
+  'quiet'
 ];
 
 let currentWordIndex = 0;
@@ -132,20 +210,26 @@ function updateTypedDisplay() {
   typedBufferEl.textContent = typedBuffer;
 }
 
-function checkWordAndMove() {
-  if (!armedDirection) return;
+async function checkWordAndMove() {
+  if (!armedDirection || moving) return;
 
   const targetWord = wordList[currentWordIndex];
 
   if (typedBuffer.toLowerCase() === targetWord) {
-    tryMove(armedDirection.dx, armedDirection.dy);
+    let newWordIndex = Math.floor(Math.random() * wordList.length);
 
-    currentWordIndex = (currentWordIndex + 1) % wordList.length;
+    while (newWordIndex === currentWordIndex) {
+      newWordIndex = Math.floor(Math.random() * wordList.length);
+    }
+
+    currentWordIndex = newWordIndex;
     typedBuffer = '';
 
     updateDirectionIcon();
     updateWordTarget();
     updateTypedDisplay();
+
+    await tryMove(armedDirection.dx, armedDirection.dy);
   } else {
     typedBuffer = '';
     updateTypedDisplay();
