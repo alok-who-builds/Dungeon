@@ -141,7 +141,6 @@ function checkWordAndMove() {
     tryMove(armedDirection.dx, armedDirection.dy);
 
     currentWordIndex = (currentWordIndex + 1) % wordList.length;
-    armedDirection = null;
     typedBuffer = '';
 
     updateDirectionIcon();
