@@ -13,7 +13,7 @@ body {
   color: #eee;
   font-family: monospace;
   text-align: center;
-  cursor: none; 
+  cursor: none;
   user-select: none;
 }
 
@@ -35,7 +35,7 @@ body {
 
 #grid {
   display: grid;
- 
+
   grid-template-columns: repeat(21, 26px);
   grid-template-rows: repeat(15, 26px);
   gap: 2px;
@@ -59,7 +59,7 @@ body {
 }
 
 .exit {
-  background: #d4af37; 
+  background: #d4af37;
 }
 
 #message {
@@ -107,5 +107,38 @@ body {
   top: 0;
   left: 0;
   transition: transform 120ms linear;
-  z-index: 3;
+  z-index: 1;
+}
+
+#game-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  z-index: 10;
+}
+
+#screen-title {
+  font-size: 2em;
+  font-weight: bold;
+  color: #d4af37;
+  margin-bottom: 25px;
+}
+
+#screen-text {
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+#screen-action {
+  margin-top: 30px;
+  color: #4caf50;
+  font-size: 1.1em;
 }
