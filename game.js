@@ -28,9 +28,15 @@ let enemy = { x: 1, y: 1 };
 let enemyStarted = false;
 let playerMoves = 0;
 let gameOver = false;
+let gameStarted = false;
 
 const messageEl = document.getElementById('message');
 const gridEl = document.getElementById('grid');
+
+const screenEl = document.getElementById('game-screen');
+const screenTitleEl = document.getElementById('screen-title');
+const screenTextEl = document.getElementById('screen-text');
+const screenActionEl = document.getElementById('screen-action');
 
 const tileEls = [];
 
@@ -156,7 +162,7 @@ function wait(ms) {
 
 // ---- Player movement ----
 async function tryMove(dx, dy) {
-  if (levelWon || gameOver || moving) return;
+  if (!gameStarted || levelWon || gameOver || moving) return;
 
   moving = true;
 
@@ -181,7 +187,6 @@ async function tryMove(dx, dy) {
     await wait(70);
 
     const openDirections = getOpenDirections(player.x, player.y);
-
     const otherDirections = openDirections.filter(direction => {
       return !(direction.dx === -dx && direction.dy === -dy);
     });
@@ -203,12 +208,17 @@ function checkWin() {
   if (player.x === exitTile.x && player.y === exitTile.y) {
     levelWon = true;
     messageEl.textContent = 'Floor cleared! You found the way out.';
+
+    screenTitleEl.textContent = 'YOU ESCAPED';
+    screenTextEl.innerHTML = 'You found the way out.';
+    screenActionEl.textContent = 'Press R to play again';
+    screenEl.style.display = 'flex';
   }
 }
 
 // ---- Enemyyy --------------
 function moveEnemy() {
-  if (!enemyStarted || levelWon || gameOver || moving) return;
+  if (!enemyStarted || !gameStarted || levelWon || gameOver || moving) return;
 
   const nextStep = getEnemyNextStep();
 
@@ -222,6 +232,11 @@ function moveEnemy() {
   if (enemy.x === player.x && enemy.y === player.y) {
     gameOver = true;
     messageEl.textContent = 'You were caught.';
+
+    screenTitleEl.textContent = 'YOU WERE CAUGHT';
+    screenTextEl.innerHTML = 'The enemy caught you.';
+    screenActionEl.textContent = 'Press R to restart';
+    screenEl.style.display = 'flex';
   }
 }
 
@@ -300,7 +315,7 @@ function updateTypedDisplay() {
 }
 
 async function checkWordAndMove() {
-  if (!armedDirection || moving) return;
+  if (!gameStarted || !armedDirection || moving) return;
 
   const targetWord = wordList[currentWordIndex];
 
@@ -336,6 +351,44 @@ async function checkWordAndMove() {
   }
 }
 
+// ---- Reset ----
+function resetGame() {
+  player = { x: 1, y: 1 };
+  enemy = { x: 1, y: 1 };
+
+  enemyStarted = false;
+  playerMoves = 0;
+  gameOver = false;
+  levelWon = false;
+  moving = false;
+
+  currentWordIndex = 0;
+  armedDirection = null;
+  typedBuffer = '';
+
+  messageEl.textContent = '';
+
+  screenTitleEl.textContent = 'DUNGEON';
+  screenTextEl.innerHTML = `
+    An enemy is coming for you.<br><br>
+    Choose a direction with an Arrow Key.<br>
+    Type the word shown on screen.<br>
+    Press Enter to move.<br><br>
+    Reach the exit before you're caught.
+  `;
+  screenActionEl.textContent = 'Press Enter to start';
+
+  updateWordTarget();
+  updateDirectionIcon();
+  updateTypedDisplay();
+
+  draw();
+  drawEnemy();
+
+  gameStarted = false;
+  screenEl.style.display = 'flex';
+}
+
 // ---- Keyboard controls ----
 window.addEventListener('keydown', (e) => {
   const key = e.key;
@@ -351,7 +404,22 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  if (levelWon || gameOver) return;
+  if (!gameStarted) {
+    if (key === 'Enter') {
+      gameStarted = true;
+      screenEl.style.display = 'none';
+    }
+
+    return;
+  }
+
+  if (levelWon || gameOver) {
+    if (key.toLowerCase() === 'r') {
+      resetGame();
+    }
+
+    return;
+  }
 
   if (directionMap[key]) {
     e.preventDefault();
