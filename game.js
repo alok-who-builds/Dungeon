@@ -38,6 +38,12 @@ const screenTitleEl = document.getElementById('screen-title');
 const screenTextEl = document.getElementById('screen-text');
 const screenActionEl = document.getElementById('screen-action');
 
+const wordUpEl = document.getElementById('word-up');
+const wordDownEl = document.getElementById('word-down');
+const wordLeftEl = document.getElementById('word-left');
+const wordRightEl = document.getElementById('word-right');
+const typedBufferEl = document.getElementById('typed-buffer');
+
 const tileEls = [];
 
 function buildGrid() {
@@ -187,6 +193,7 @@ async function tryMove(dx, dy) {
     await wait(70);
 
     const openDirections = getOpenDirections(player.x, player.y);
+
     const otherDirections = openDirections.filter(direction => {
       return !(direction.dx === -dx && direction.dy === -dy);
     });
@@ -242,7 +249,7 @@ function moveEnemy() {
 
 setInterval(moveEnemy, 750);
 
-// ---- Typing-to-move ----
+// ---- Direction words ----
 const wordList = [
   'shadow',
   'flicker',
@@ -285,69 +292,86 @@ const wordList = [
   'quiet'
 ];
 
-let currentWordIndex = 0;
-let armedDirection = null;
-let typedBuffer = '';
-
-const wordTargetEl = document.getElementById('word-target');
-const typedBufferEl = document.getElementById('typed-buffer');
-const directionIconEl = document.getElementById('direction-icon');
-
-const directionMap = {
-  ArrowUp: { dx: 0, dy: -1, icon: '↑' },
-  ArrowDown: { dx: 0, dy: 1, icon: '↓' },
-  ArrowLeft: { dx: -1, dy: 0, icon: '←' },
-  ArrowRight: { dx: 1, dy: 0, icon: '→' },
+const directionWords = {
+  up: '',
+  down: '',
+  left: '',
+  right: ''
 };
 
-function updateDirectionIcon() {
-  directionIconEl.textContent = armedDirection
-    ? armedDirection.icon
-    : '(pick a direction)';
-}
+let typedBuffer = '';
 
-function updateWordTarget() {
-  wordTargetEl.textContent = wordList[currentWordIndex];
+function setDirectionWords() {
+  const availableWords = [...wordList];
+
+  for (const direction of Object.keys(directionWords)) {
+    const randomIndex = Math.floor(Math.random() * availableWords.length);
+
+    directionWords[direction] = availableWords[randomIndex];
+
+    availableWords.splice(randomIndex, 1);
+  }
+
+  wordUpEl.textContent = directionWords.up;
+  wordDownEl.textContent = directionWords.down;
+  wordLeftEl.textContent = directionWords.left;
+  wordRightEl.textContent = directionWords.right;
 }
 
 function updateTypedDisplay() {
   typedBufferEl.textContent = typedBuffer;
 }
 
+function getTypedDirection() {
+  if (typedBuffer === directionWords.up) return 'up';
+  if (typedBuffer === directionWords.down) return 'down';
+  if (typedBuffer === directionWords.left) return 'left';
+  if (typedBuffer === directionWords.right) return 'right';
+
+  return null;
+}
+
 async function checkWordAndMove() {
-  if (!gameStarted || !armedDirection || moving) return;
+  if (!gameStarted || moving) return;
 
-  const targetWord = wordList[currentWordIndex];
+  const direction = getTypedDirection();
 
-  if (typedBuffer.toLowerCase() === targetWord) {
-    let newWordIndex = Math.floor(Math.random() * wordList.length);
-
-    while (newWordIndex === currentWordIndex) {
-      newWordIndex = Math.floor(Math.random() * wordList.length);
-    }
-
-    currentWordIndex = newWordIndex;
-    typedBuffer = '';
-
-    updateDirectionIcon();
-    updateWordTarget();
-    updateTypedDisplay();
-
-    const startX = player.x;
-    const startY = player.y;
-
-    await tryMove(armedDirection.dx, armedDirection.dy);
-
-    if (player.x !== startX || player.y !== startY) {
-      playerMoves++;
-
-      if (playerMoves >= 3) {
-        enemyStarted = true;
-      }
-    }
-  } else {
+  if (!direction) {
     typedBuffer = '';
     updateTypedDisplay();
+    return;
+  }
+
+  typedBuffer = '';
+  updateTypedDisplay();
+
+  setDirectionWords();
+
+  const startX = player.x;
+  const startY = player.y;
+
+  if (direction === 'up') {
+    await tryMove(0, -1);
+  }
+
+  if (direction === 'down') {
+    await tryMove(0, 1);
+  }
+
+  if (direction === 'left') {
+    await tryMove(-1, 0);
+  }
+
+  if (direction === 'right') {
+    await tryMove(1, 0);
+  }
+
+  if (player.x !== startX || player.y !== startY) {
+    playerMoves++;
+
+    if (playerMoves >= 3) {
+      enemyStarted = true;
+    }
   }
 }
 
@@ -361,31 +385,29 @@ function resetGame() {
   gameOver = false;
   levelWon = false;
   moving = false;
+  gameStarted = false;
 
-  currentWordIndex = 0;
-  armedDirection = null;
   typedBuffer = '';
 
   messageEl.textContent = '';
 
+  setDirectionWords();
+  updateTypedDisplay();
+
   screenTitleEl.textContent = 'DUNGEON';
+
   screenTextEl.innerHTML = `
     An enemy is coming for you.<br><br>
-    Choose a direction with an Arrow Key.<br>
-    Type the word shown on screen.<br>
-    Press Enter to move.<br><br>
+    Type the word for the direction you want to move.<br>
+    Press Enter or Space to move.<br><br>
     Reach the exit before you're caught.
   `;
-  screenActionEl.textContent = 'Press Enter to start';
 
-  updateWordTarget();
-  updateDirectionIcon();
-  updateTypedDisplay();
+  screenActionEl.textContent = 'Press Enter to start';
 
   draw();
   drawEnemy();
 
-  gameStarted = false;
   screenEl.style.display = 'flex';
 }
 
@@ -421,14 +443,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  if (directionMap[key]) {
-    e.preventDefault();
-    armedDirection = directionMap[key];
-    updateDirectionIcon();
-    return;
-  }
-
-  if (key === 'Enter') {
+  if (key === 'Enter' || key === ' ') {
     e.preventDefault();
     checkWordAndMove();
     return;
@@ -455,8 +470,21 @@ window.addEventListener('blur', () => {
 
 // ---- Init ----
 buildGrid();
+setDirectionWords();
 draw();
 drawEnemy();
-updateWordTarget();
-updateDirectionIcon();
 updateTypedDisplay();
+
+screenEl.style.display = 'flex';
+
+
+function fitToViewport() {
+  document.body.style.transform = 'scale(1)';
+  const scaleX = window.innerWidth / document.body.scrollWidth;
+  const scaleY = window.innerHeight / document.body.scrollHeight;
+  const scale = Math.min(scaleX, scaleY, 1);
+  document.body.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', fitToViewport);
+fitToViewport();
